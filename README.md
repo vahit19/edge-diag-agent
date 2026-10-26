@@ -138,6 +138,11 @@ Industrial Edge apps use: one service, a fixed tag, an explicit memory limit and
 policy. With the 3B model use 5 GB of memory; for a 3 GB budget, build with
 `MODEL=qwen2.5-1.5b-instruct-q4_k_m.gguf`.
 
+CI (`.github/workflows/container.yml`) builds the image with the 1.5B model and answers one
+question inside it with networking disabled (`docker run --network none --memory 3g`). On the
+first run the image was 2.95 GB. The answer took 62 s on 2 threads of a GitHub runner; it cited
+F07900 from the G120C manual (p.709) and passed both checks. The image is not pushed anywhere.
+
 ## Limitations
 
 - **Small sets.** 9 forum questions, 40 manual entries. The confidence intervals are wide and
