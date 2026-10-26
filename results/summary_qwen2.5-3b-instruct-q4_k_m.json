@@ -1,0 +1,27 @@
+{
+ "model": "qwen2.5-3b-instruct-q4_k_m.gguf",
+ "closed_book": false,
+ "threads": 4,
+ "load_s": 4.2,
+ "rss_after_load_mb": 3059,
+ "rss_peak_mb": 3899,
+ "latency_p50_s": 32.9,
+ "latency_p95_s": 55.1,
+ "completion_tokens_per_s_median": 4.2,
+ "forum_grounded": "9/9 (100%, 95% CI 70-100)",
+ "forum_with_invented_ids": "0/9 (0%, 95% CI 0-30)",
+ "forum_gold_items_mentioned": "9/17 (53%, 95% CI 31-74)",
+ "manual_grounded": "40/40 (100%, 95% CI 91-100)",
+ "manual_with_invented_ids": "0/40 (0%, 95% CI 0-9)",
+ "manual_gold_items_mentioned": "38/40 (95%, 95% CI 83-99)",
+ "manual_fault_ack_correct": "21/24 (88%, 95% CI 69-96)",
+ "manual_fault_ack_wrong": "2/24 (8%, 95% CI 2-26)",
+ "manual_fault_ack_not_stated": "1/24 (4%, 95% CI 1-20)",
+ "manual_alarm_told_to_acknowledge": "0/16 (0%, 95% CI 0-19)",
+ "ack_gate_flags_wrong": "2/2 (100%, 95% CI 34-100)",
+ "ack_gate_flags_not_wrong": "0/38 (0%, 95% CI 0-9)",
+ "manual_meaning_overlap_mean": 0.94,
+ "forum_out_of_scope_abstained": [
+  false
+ ]
+}

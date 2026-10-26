@@ -1,0 +1,37 @@
+[
+ {
+  "config": "full (exact + BM25 + dense + linked params)",
+  "gold_items_found": 11,
+  "gold_items": 17,
+  "questions_fully_covered": 4,
+  "questions": 8
+ },
+ {
+  "config": "no linked parameters",
+  "gold_items_found": 9,
+  "gold_items": 17,
+  "questions_fully_covered": 2,
+  "questions": 8
+ },
+ {
+  "config": "no exact identifier lookup",
+  "gold_items_found": 4,
+  "gold_items": 17,
+  "questions_fully_covered": 1,
+  "questions": 8
+ },
+ {
+  "config": "BM25 only",
+  "gold_items_found": 4,
+  "gold_items": 17,
+  "questions_fully_covered": 2,
+  "questions": 8
+ },
+ {
+  "config": "dense only",
+  "gold_items_found": 3,
+  "gold_items": 17,
+  "questions_fully_covered": 1,
+  "questions": 8
+ }
+]

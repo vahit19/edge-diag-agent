@@ -1,0 +1,11 @@
+pymupdf==2.0
+rank-bm25==0.2.2
+fastembed==0.9.1
+onnxruntime==1.31.0
+numpy==2.5.4
+llama-cpp-python==0.3.36
+huggingface-hub==1.33.0
+fastapi==0.162.0
+uvicorn==0.54.0
+pydantic==2.14.1
+psutil==7.2.2

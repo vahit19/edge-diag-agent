@@ -1,0 +1,22 @@
+# Compose file in the shape the Industrial Edge App Publisher expects: one service, a fixed
+# image tag, an explicit memory limit (mandatory for Industrial Edge apps) and a restart policy.
+version: "2.4"
+services:
+  diag-agent:
+    image: edge-diag-agent:0.1.0
+    build:
+      context: .
+      args:
+        MODEL: qwen2.5-3b-instruct-q4_k_m.gguf   # qwen2.5-1.5b-instruct-q4_k_m.gguf fits a 3g limit
+    restart: unless-stopped
+    mem_limit: 5g   # measured peak RSS 3.9 GB with the 3B model, 2.2 GB with 1.5B
+    cpus: 4
+    environment:
+      - DIAG_THREADS=4
+    ports:
+      - "8080:8080"
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "2"

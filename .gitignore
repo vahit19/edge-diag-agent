@@ -1,0 +1,8 @@
+.venv/
+__pycache__/
+*.pyc
+# Siemens manuals, parsed text, forum questions, models and indexes are downloaded or built locally
+data/
+# per-question model answers paraphrase the manuals; summaries and retrieval numbers are kept
+results/answers_*.jsonl
+.pytest_cache/
