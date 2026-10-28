@@ -47,7 +47,7 @@ def main() -> None:
     args = ap.parse_args()
     base = args.url.rstrip("/")
     health = call(base + "/api/health", timeout=30)
-    print("health:", health)
+    print("health:", health, flush=True)
 
     rows = []
     for code, device in MANUAL_SET[:args.n]:
@@ -58,7 +58,7 @@ def main() -> None:
         rows.append({"code": code, "device": device, "total_ms": round(total), **r["timing_ms"],
                      "passed": r["passed"], "ack_conflict": r["ack_conflict"], "unsupported": r["unsupported"],
                      "invented": r["invented"]})
-        print(f"{code:7} {device[-14:]:>14}  {total / 1000:6.1f} s  passed={r['passed']}")
+        print(f"{code:7} {device[-14:]:>14}  {total / 1000:6.1f} s  passed={r['passed']}", flush=True)
 
     total = [r["total_ms"] for r in rows]
     summary = {"url": base, "health": health, "n": len(rows),

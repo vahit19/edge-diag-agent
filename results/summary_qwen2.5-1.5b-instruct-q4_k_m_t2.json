@@ -22,6 +22,7 @@
  "manual_alarm_told_to_acknowledge": "0/16 (0%, 95% CI 0-19)",
  "ack_gate_flags_wrong": "0/0",
  "ack_gate_flags_not_wrong": "0/40 (0%, 95% CI 0-9)",
+ "manual_encoder_in_first_300_chars": "1/40 (2%, 95% CI 0-13)",
  "manual_meaning_overlap_mean": 0.83,
  "forum_out_of_scope_abstained": [
   false

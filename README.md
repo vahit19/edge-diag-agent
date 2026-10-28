@@ -1,4 +1,25 @@
-# edge-diag-agent
+# A drive fault assistant that runs offline on two CPU cores and checks its own answers
+
+[![container](https://github.com/vahit19/edge-diag-agent/actions/workflows/container.yml/badge.svg)](https://github.com/vahit19/edge-diag-agent/actions/workflows/container.yml)
+![License: MIT](https://img.shields.io/badge/license-MIT-blue)
+![Python 3.12](https://img.shields.io/badge/python-3.12-blue)
+![Runs offline](https://img.shields.io/badge/network-none-555)
+![Knowledge: 661 faults, 3028 parameters](https://img.shields.io/badge/manuals-661%20faults%20%C2%B7%203028%20parameters-555)
+
+**Asked about 40 SINAMICS G120/G120C fault and alarm codes without the manuals, a 3B model named an
+encoder problem in 30 of its answers; none of the 40 is an encoder fault. With the List Manuals
+stored on the device it gets the meaning right (word overlap 0.94), and a check caught both of its
+wrong acknowledgment instructions with no false alarm on the other 38 (the check was written after
+seeing those two errors). In the Siemens Industrial
+Edge Playground, limited to 2 cores and 3 GB, 39 of 40 answers passed both checks with 1.24 GiB of
+memory.**
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/figures/manuals-dark.svg">
+  <img alt="Bar chart: without the manuals the 3B model names an encoder problem in 30 of 40 answers and states no acknowledgment correctly; with the manuals 1 of 40, 21 of 24 correct, meaning overlap 0.06 versus 0.94" src="docs/figures/manuals.svg" width="100%">
+</picture>
+
+**Contents:** [Headline results](#headline-results) · [Siemens Industrial Edge Playground](#in-the-siemens-industrial-edge-playground) · [Real questions from technicians](#real-questions-from-technicians) · [How it works](#how-it-works) · [Run it](#run-it) · [Limitations](#limitations)
 
 An offline diagnostic assistant for Siemens SINAMICS G120 / G120C drives that runs on a few CPU
 cores with no internet connection. A technician types what the drive shows, for example
@@ -13,7 +34,8 @@ parameter number the model was not shown. The fault's reaction and acknowledgmen
 word for word from the manual and shown beside the model's text, never paraphrased.
 
 Everything is measured end to end on real data: retrieval quality, answer correctness, latency
-and memory. The numbers below come from `results/`, produced by `eval/run_eval.py`.
+and memory. The numbers below come from `results/`, produced by `eval/run_eval.py`; the figures
+are drawn from the same files by `python -m eval.figures`.
 
 ## Headline results
 
@@ -30,7 +52,7 @@ On 40 fault/alarm entries sampled from the manuals (seed 0), the model was asked
 | Peak memory (process RSS) | 3.9 GB | 2.2 GB | 3.7 GB |
 
 Without the manuals, the same 3B model attributed 30 of the 40 codes to an encoder problem
-within its first few sentences. None of the 40 entries is an encoder fault. With the manuals it
+within the first 300 characters of its answer (1/40 with the manuals). None of the 40 entries is an encoder fault. With the manuals it
 gets the meaning right, but in 2 of 24 faults it copied the line "Reaction: NONE" as the
 acknowledgment. The manual says "Acknowledge: POWER ON" for both.
 
@@ -73,6 +95,13 @@ Most of the prompt is context the answer does not need. With `DIAG_K=3 DIAG_EXCE
 the agent retrieves 3 entries instead of 5 and cuts every excerpt except the exactly matched entry
 at 400 characters; the matched entry stays whole. Measured on the laptop limited to 2 threads, all
 49 questions (`python -m eval.run_eval answers --threads 2 --k 3 --other-chars 400`):
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/figures/latency-dark.svg">
+  <img alt="Bar chart of seconds per answer, median and 95th percentile: laptop 4 threads 19 and 32, laptop 2 threads 22 and 36, laptop 2 threads with short excerpts 11 and 18, Playground VM 2 cores 167 and 285" src="docs/figures/latency.svg" width="100%">
+</picture>
+
+The laptop rows cover all 49 questions, the Playground row the 40 manual questions.
 
 | 1.5B model, 2 threads | Default (5 entries, 1400 chars) | Short (3 entries, 400 chars) |
 |---|---|---|
@@ -119,6 +148,11 @@ against the manual. The question texts are kept out of this repository; the thre
 The table counts gold items in the top 5 entries plus the linked parameters: 8 questions with
 gold, 17 gold items.
 
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/figures/retrieval-dark.svg">
+  <img alt="Bar chart: gold items found out of 17; full retrieval 11, without linked parameters 9, without exact code lookup 4, BM25 only 4, dense only 3" src="docs/figures/retrieval.svg" width="100%">
+</picture>
+
 | Configuration | Gold items found | Questions fully covered |
 |---|---|---|
 | Full: exact identifiers + BM25 + dense + linked parameters | **11/17** (65%, 95% CI 41–83) | 4/8 |
@@ -141,19 +175,21 @@ too few to measure whether that is enough.
 
 ## How it works
 
-```
-question ──► identifier normaliser ──► exact lookup ─┐
-         └─► BM25 ───────────────┐                    ├─► top 5 + parameters the matched
-         └─► bge-small (ONNX) ───┴─► rank fusion ─────┘   entry's Remedy points to
-                                                                │
-                      manual excerpts tagged [S1]..[Sn] ◄───────┘
-                                     │
-                      Qwen2.5 3B Q4_K_M (llama.cpp, CPU)
-                                     │
-             checks: every code/parameter in the answer was shown to the model;
-             stated acknowledgment agrees with the manual entry
-                                     │
-             web page: manual facts verbatim, answer, warnings, manual + page for each source
+```mermaid
+flowchart LR
+    Q["Technician's question<br/>'G120C shows F7900 in auto'"] --> N["Code normaliser<br/>F7900 → F07900"]
+    subgraph KB["On the device · no network"]
+        M[("2 List Manuals<br/>661 faults · 3028 parameters")]
+        N --> X["Exact lookup"]
+        Q --> B["BM25"]
+        Q --> D["bge-small embeddings<br/>(ONNX)"]
+        X & B & D --> F["Rank fusion · top 5<br/>+ parameters the Remedy names"]
+        M -.-> X & B & D
+        F --> L["Qwen2.5 3B / 1.5B, 4-bit<br/>llama.cpp on CPU"]
+        L --> G1{"Grounding check<br/>every code shown to the model?"}
+        G1 --> G2{"Acknowledgment check<br/>agrees with the manual?"}
+    end
+    G2 --> P["Web page: manual lines verbatim,<br/>answer, warnings, page links"]
 ```
 
 | File | What it does |
@@ -163,6 +199,7 @@ question ──► identifier normaliser ──► exact lookup ─┐
 | `diag/agent.py` | Prompt, local generation, grounding check, acknowledgment check |
 | `diag/server.py` | FastAPI: `POST /api/ask`, `GET /api/health`, a one-page UI; one generation at a time |
 | `eval/run_eval.py` | `retrieval`, `answers`, `rescore` modes; Wilson 95% intervals; `--threads`, `--k`, `--other-chars` |
+| `eval/figures.py` | Draws the README figures (light and dark) from `results/*.json`; needs matplotlib |
 | `scripts/bench_api.py` | Times a running service on the target device with the 40 manual questions; standard library only |
 | `tests/` | Checks that need neither the manuals nor a model |
 

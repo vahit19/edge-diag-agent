@@ -135,6 +135,8 @@ def quality(rows: list) -> dict:
     right = [r for r in ms if r["ack"] != "wrong"]
     summary["ack_gate_flags_wrong"] = fmt(sum(r["ack_flagged"] for r in wrong), len(wrong))
     summary["ack_gate_flags_not_wrong"] = fmt(sum(r["ack_flagged"] for r in right), len(right))
+    # none of the 40 sampled entries is an encoder fault; the closed-book model guesses one anyway
+    summary["manual_encoder_in_first_300_chars"] = fmt(sum("encoder" in r["answer"][:300].lower() for r in ms), len(ms))
     summary["manual_meaning_overlap_mean"] = round(statistics.mean(r["meaning_overlap"] for r in ms if r.get("meaning_overlap") is not None), 2)
     summary["forum_out_of_scope_abstained"] = [r.get("abstained") for r in rows if "abstained" in r]
     return summary
