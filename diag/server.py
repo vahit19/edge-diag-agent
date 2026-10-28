@@ -26,7 +26,8 @@ def agent() -> Agent:
     global _agent
     if _agent is None:
         _agent = Agent(kb=Path(os.environ.get("DIAG_KB", "data/kb")), index=Path(os.environ.get("DIAG_INDEX", "data/index")),
-                       model=os.environ.get("DIAG_MODEL", DEFAULT_MODEL), n_threads=int(os.environ.get("DIAG_THREADS", 4)))
+                       model=os.environ.get("DIAG_MODEL", DEFAULT_MODEL), n_threads=int(os.environ.get("DIAG_THREADS", 4)),
+                       k=int(os.environ.get("DIAG_K", 5)), other_chars=int(os.environ.get("DIAG_EXCERPT_CHARS", 1400)))
     return _agent
 
 

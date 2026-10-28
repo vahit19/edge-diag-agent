@@ -140,17 +140,23 @@ def quality(rows: list) -> dict:
     return summary
 
 
+def variant(args) -> str:
+    """File-name suffix for settings that differ from the defaults (4 threads, k=5, 1400-char excerpts)."""
+    return (("_closedbook" if args.closed_book else "") + (f"_t{args.threads}" if args.threads != 4 else "")
+            + (f"_k{args.k}" if args.k != 5 else "") + (f"_c{args.other_chars}" if args.other_chars != 1400 else ""))
+
+
 def answers(args) -> None:
     import psutil
     from diag.agent import Agent
     proc = psutil.Process()
     t = time.perf_counter()
-    agent = Agent(model=args.model, n_threads=args.threads)
+    agent = Agent(model=args.model, n_threads=args.threads, k=args.k, other_chars=args.other_chars)
     load_s = time.perf_counter() - t
     rss_loaded = proc.memory_info().rss
     qs = forum_set() + manual_set(args.n)
     OUT.mkdir(exist_ok=True)
-    out_path = OUT / f"answers_{Path(args.model).stem}{'_closedbook' if args.closed_book else ''}.jsonl"
+    out_path = OUT / f"answers_{Path(args.model).stem}{variant(args)}.jsonl"
     rows, peak = [], rss_loaded
     with open(out_path, "w", encoding="utf-8") as fh:
         for q in qs:
@@ -168,6 +174,7 @@ def answers(args) -> None:
     tps = [r["completion_tokens"] / (r["generate_ms"] / 1000) for r in rows if r["generate_ms"]]
     summary = {
         "model": Path(args.model).name, "closed_book": args.closed_book, "threads": args.threads,
+        "k": args.k, "other_chars": args.other_chars,
         "load_s": round(load_s, 1), "rss_after_load_mb": round(rss_loaded / 2**20), "rss_peak_mb": round(peak / 2**20),
         "latency_p50_s": round(statistics.median(lat) / 1000, 1), "latency_p95_s": round(lat[int(0.95 * (len(lat) - 1))] / 1000, 1),
         "completion_tokens_per_s_median": round(statistics.median(tps), 1),
@@ -185,19 +192,20 @@ def rescore(args) -> None:
     qs = {q["id"]: q for q in forum_set() + manual_set(args.n)}
     for path in sorted(OUT.glob("answers_*.jsonl")):
         rows = [json.loads(l) for l in open(path, encoding="utf-8")]
+        spath = OUT / f"summary_{path.stem.removeprefix('answers_')}.json"
+        old = json.load(open(spath))
         for i, r in enumerate(rows):
             q = qs[r["id"]]
             shown = [Doc(**{**docs[(s["id"], s["device"])].__dict__, "why": s["why"]}) for s in r["sources"]]
-            mentioned, unsupported, invented = ground(r["answer"], q["question"], shown, known)
+            mentioned, unsupported, invented = ground(r["answer"], q["question"], shown, known, old.get("other_chars", 1400))
             conflict = ack_conflicts(r["answer"], facts(shown))
             keep = {k: r[k] for k in ("set", "answer", "sources", "retrieve_ms", "generate_ms", "prompt_tokens", "completion_tokens")}
             rows[i] = {**check(q, r["answer"], mentioned, unsupported, invented, conflict), **keep}
         with open(path, "w", encoding="utf-8") as fh:
             fh.writelines(json.dumps(r, ensure_ascii=False) + "\n" for r in rows)
-        spath = OUT / f"summary_{path.stem.removeprefix('answers_')}.json"
-        old = json.load(open(spath))
-        summary = {k: old[k] for k in ("model", "closed_book", "threads", "load_s", "rss_after_load_mb", "rss_peak_mb",
-                                       "latency_p50_s", "latency_p95_s", "completion_tokens_per_s_median")}
+        summary = {k: old[k] for k in ("model", "closed_book", "threads", "k", "other_chars", "load_s", "rss_after_load_mb",
+                                       "rss_peak_mb", "latency_p50_s", "latency_p95_s", "completion_tokens_per_s_median")
+                   if k in old}
         summary.update(quality(rows))
         json.dump(summary, open(spath, "w"), indent=1)
         print(path.name, json.dumps(summary, indent=1))
@@ -219,5 +227,7 @@ if __name__ == "__main__":
     ap.add_argument("--threads", type=int, default=4)
     ap.add_argument("--n", type=int, default=40)
     ap.add_argument("--closed-book", action="store_true")
+    ap.add_argument("--k", type=int, default=5, help="manual entries retrieved per question")
+    ap.add_argument("--other-chars", type=int, default=1400, help="excerpt length for all but the exactly matched entry")
     a = ap.parse_args()
     {"retrieval": retrieval, "answers": answers, "rescore": rescore}[a.what](a)

@@ -40,6 +40,62 @@ other 38 (0/38). The gate was written after seeing these two errors, so this res
 gate works as designed. It is not an independent test. In the web page, the manual's own line
 is always shown above the answer either way.
 
+## In the Siemens Industrial Edge Playground
+
+On 27 Oct 2026 the container was built and run in the Siemens Industrial Edge Playground (Virtual
+Lab). The Playground's Industrial Edge Virtual Device (IEVD 1.24.2) has 2 x86-64 cores, 15.4 GB of
+memory and 9.1 GB of free storage. Installing on the IEVD needs an `.app` package from the
+Industrial Edge App Publisher, which was not available for this account. The container was therefore
+run on the Playground's Ubuntu VM with the device's core count as the limit (`docker run --cpus 2
+--memory 3g`, `DIAG_THREADS=2`). It was asked the same 40 manual questions through the HTTP API with
+`scripts/bench_api.py`. The results are in `results/bench_vlab_playground_1.5b.json`.
+
+| 1.5B model, 2 cores, 3 GB limit | Playground VM | Laptop, 4 threads |
+|---|---|---|
+| Answers passing both checks | 39/40 | 39/40 |
+| Acknowledgment conflicts flagged | 0/40 | 0/40 |
+| Latency per answer, p50 / p95 | 167 s / 285 s | 19.2 s / 31.7 s |
+| Retrieval, p50 | 68 ms | about 30 ms |
+| Peak container memory (`docker stats`) | 1.24 GiB | 2.2 GB (process RSS) |
+| Ready after `docker run` | 5 s | n/a |
+
+The one failure is the same entry in both runs: for F13009 the model named a parameter, r4956, that
+does not exist in the manual, and the grounding check flagged it. Almost all the time goes to
+generation, and two cores of this VM are about 9 times slower than four laptop threads. Answers of
+nearly three minutes are too slow for interactive use. A check run of the rebuilt image with
+networking disabled shows where the input goes: the F7900 question used 2,679 prompt tokens of
+manual excerpts and produced 190 tokens. The memory figures use different tools and are not
+directly comparable.
+
+### Shorter excerpts for 2-core devices
+
+Most of the prompt is context the answer does not need. With `DIAG_K=3 DIAG_EXCERPT_CHARS=400`
+the agent retrieves 3 entries instead of 5 and cuts every excerpt except the exactly matched entry
+at 400 characters; the matched entry stays whole. Measured on the laptop limited to 2 threads, all
+49 questions (`python -m eval.run_eval answers --threads 2 --k 3 --other-chars 400`):
+
+| 1.5B model, 2 threads | Default (5 entries, 1400 chars) | Short (3 entries, 400 chars) |
+|---|---|---|
+| Prompt tokens, median (manual set) | 2,560 | 941 |
+| Latency per answer, p50 / p95 | 22.2 s / 36.4 s | **10.8 s / 18.3 s** |
+| Manual answers passing the grounding check | 39/40 | 40/40 |
+| Fault acknowledgment stated correctly / wrongly | 19/24 / 0/24 | 16/24 / 0/24 |
+| Meaning overlap with the manual title | 0.83 | 0.85 |
+| Forum gold items mentioned | 8/17 | 9/17 |
+
+The answers are twice as fast. The cost is that 3 more answers leave the acknowledgment out (8/24
+instead of 5/24); none states a wrong one, and the page shows the manual's acknowledgment line
+above every answer anyway. The F13009 answer no longer invents a parameter, but one question is
+not evidence of a trend. The defaults stay at 5 entries and 1400 characters. The short setting has
+not yet been timed on the Playground VM; scaling its 167 s by the laptop ratio is an estimate,
+not a measurement.
+
+Building on the 2-core, 8 GB VM showed two problems that the GitHub runner did not. The embedding
+index ran out of memory with fastembed's default batch of 256, so it now uses batches of 16. A
+`chown -R` step copied the 1.19 GB application folder into a second image layer; `COPY --chown`
+removes that copy. With both fixes the image built from scratch on the same VM, without swap, in
+27 minutes; its disk usage fell from 5.53 GB to 3.18 GB (compressed content 2.54 GB to 1.38 GB).
+
 ## Real questions from technicians
 
 The forum set has 9 real questions from public PLCtalk threads about G120/G120C drives. The gold
@@ -106,7 +162,8 @@ question ──► identifier normaliser ──► exact lookup ─┐
 | `diag/retrieve.py` | Identifier normalisation, BM25, dense vectors, reciprocal-rank fusion, device filter, linked parameters |
 | `diag/agent.py` | Prompt, local generation, grounding check, acknowledgment check |
 | `diag/server.py` | FastAPI: `POST /api/ask`, `GET /api/health`, a one-page UI; one generation at a time |
-| `eval/run_eval.py` | `retrieval`, `answers`, `rescore` modes; Wilson 95% intervals |
+| `eval/run_eval.py` | `retrieval`, `answers`, `rescore` modes; Wilson 95% intervals; `--threads`, `--k`, `--other-chars` |
+| `scripts/bench_api.py` | Times a running service on the target device with the 40 manual questions; standard library only |
 | `tests/` | Checks that need neither the manuals nor a model |
 
 Knowledge base: the SINAMICS G120 Control Units CU240B-2/CU240E-2 List Manual (A5E33839529,
@@ -155,9 +212,9 @@ F07900 from the G120C manual (p.709) and passed both checks. The image is not pu
 - **Simple scoring.** Meaning is scored by word overlap with the manual title, and
   acknowledgment by the mode stated next to the word "acknowledge". Both are rough checks;
   answers were also read by hand for the failure cases above.
-- **Not measured on industrial hardware.** Timings are from a laptop CPU (Intel i7-13800H)
-  limited to 4 threads. An industrial PC with fewer or slower cores will be slower. The
-  container image has not yet been built and timed on an Industrial Edge device.
+- **Not measured on industrial hardware.** The main timings are from a laptop CPU (Intel
+  i7-13800H) limited to 4 threads. The Playground run used a cloud VM limited to the virtual
+  device's 2 cores, not the device itself and not a physical industrial PC.
 - **Questions without a code** are the weak case, for example "47F, speed controller
   inhibited". Retrieval misses the status parameters they need (r0046, r0054). The List
   Manual also lacks wiring and commissioning steps; the operating instructions, which cover

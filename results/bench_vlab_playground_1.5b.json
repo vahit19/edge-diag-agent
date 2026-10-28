@@ -1,0 +1,341 @@
+{
+ "summary": {
+  "where": "Siemens Industrial Edge Playground (VLAB), Ubuntu 22.04 jumphost VM, container limited with --cpus 2 --memory 3g, DIAG_THREADS=2",
+  "date": "2026-10-27",
+  "model": "qwen2.5-1.5b-instruct-q4_k_m.gguf",
+  "n": 40,
+  "total_ms_p50": 167429,
+  "total_ms_p95": 284816,
+  "generate_ms_p50": 167325,
+  "retrieve_ms_p50": 68,
+  "passed": 39,
+  "ack_conflicts": 0,
+  "peak_mem_gib_docker_stats": 1.242,
+  "startup_to_health_s": 5,
+  "note": "Server summary copied from bench_api.py output on the VM; per-question rows transcribed from the VM screen (code, seconds end to end, generate ms)."
+ },
+ "rows": [
+  {
+   "code": "F01152",
+   "device": "SINAMICS G120C",
+   "total_s": 123,
+   "generate_ms": 122536,
+   "passed": true,
+   "invented": []
+  },
+  {
+   "code": "A01788",
+   "device": "SINAMICS G120C",
+   "total_s": 102,
+   "generate_ms": 102341,
+   "passed": true,
+   "invented": []
+  },
+  {
+   "code": "F01122",
+   "device": "SINAMICS G120 CU240B-2/CU240E-2",
+   "total_s": 178,
+   "generate_ms": 178371,
+   "passed": true,
+   "invented": []
+  },
+  {
+   "code": "F30011",
+   "device": "SINAMICS G120 CU240B-2/CU240E-2",
+   "total_s": 249,
+   "generate_ms": 248917,
+   "passed": true,
+   "invented": []
+  },
+  {
+   "code": "A07892",
+   "device": "SINAMICS G120C",
+   "total_s": 138,
+   "generate_ms": 138003,
+   "passed": true,
+   "invented": []
+  },
+  {
+   "code": "A07352",
+   "device": "SINAMICS G120C",
+   "total_s": 142,
+   "generate_ms": 141888,
+   "passed": true,
+   "invented": []
+  },
+  {
+   "code": "F01650",
+   "device": "SINAMICS G120C",
+   "total_s": 217,
+   "generate_ms": 217424,
+   "passed": true,
+   "invented": []
+  },
+  {
+   "code": "F30659",
+   "device": "SINAMICS G120 CU240B-2/CU240E-2",
+   "total_s": 293,
+   "generate_ms": 293407,
+   "passed": true,
+   "invented": []
+  },
+  {
+   "code": "A07094",
+   "device": "SINAMICS G120C",
+   "total_s": 122,
+   "generate_ms": 122057,
+   "passed": true,
+   "invented": []
+  },
+  {
+   "code": "F01023",
+   "device": "SINAMICS G120C",
+   "total_s": 131,
+   "generate_ms": 130732,
+   "passed": true,
+   "invented": []
+  },
+  {
+   "code": "F30036",
+   "device": "SINAMICS G120C",
+   "total_s": 130,
+   "generate_ms": 130112,
+   "passed": true,
+   "invented": []
+  },
+  {
+   "code": "F07967",
+   "device": "SINAMICS G120 CU240B-2/CU240E-2",
+   "total_s": 154,
+   "generate_ms": 153566,
+   "passed": true,
+   "invented": []
+  },
+  {
+   "code": "F07802",
+   "device": "SINAMICS G120C",
+   "total_s": 189,
+   "generate_ms": 188989,
+   "passed": true,
+   "invented": []
+  },
+  {
+   "code": "A06921",
+   "device": "SINAMICS G120 CU240B-2/CU240E-2",
+   "total_s": 123,
+   "generate_ms": 122726,
+   "passed": true,
+   "invented": []
+  },
+  {
+   "code": "A30054",
+   "device": "SINAMICS G120 CU240B-2/CU240E-2",
+   "total_s": 167,
+   "generate_ms": 167113,
+   "passed": true,
+   "invented": []
+  },
+  {
+   "code": "F06922",
+   "device": "SINAMICS G120 CU240B-2/CU240E-2",
+   "total_s": 207,
+   "generate_ms": 207275,
+   "passed": true,
+   "invented": []
+  },
+  {
+   "code": "A01788",
+   "device": "SINAMICS G120 CU240B-2/CU240E-2",
+   "total_s": 148,
+   "generate_ms": 147891,
+   "passed": true,
+   "invented": []
+  },
+  {
+   "code": "F30805",
+   "device": "SINAMICS G120C",
+   "total_s": 138,
+   "generate_ms": 137983,
+   "passed": true,
+   "invented": []
+  },
+  {
+   "code": "F13009",
+   "device": "SINAMICS G120 CU240B-2/CU240E-2",
+   "total_s": 168,
+   "generate_ms": 167537,
+   "passed": false,
+   "invented": [
+    "r4956"
+   ]
+  },
+  {
+   "code": "F07985",
+   "device": "SINAMICS G120C",
+   "total_s": 225,
+   "generate_ms": 224757,
+   "passed": true,
+   "invented": []
+  },
+  {
+   "code": "A30502",
+   "device": "SINAMICS G120C",
+   "total_s": 194,
+   "generate_ms": 194078,
+   "passed": true,
+   "invented": []
+  },
+  {
+   "code": "F07082",
+   "device": "SINAMICS G120 CU240B-2/CU240E-2",
+   "total_s": 300,
+   "generate_ms": 300111,
+   "passed": true,
+   "invented": []
+  },
+  {
+   "code": "F30682",
+   "device": "SINAMICS G120 CU240B-2/CU240E-2",
+   "total_s": 285,
+   "generate_ms": 284742,
+   "passed": true,
+   "invented": []
+  },
+  {
+   "code": "A01799",
+   "device": "SINAMICS G120 CU240B-2/CU240E-2",
+   "total_s": 140,
+   "generate_ms": 140056,
+   "passed": true,
+   "invented": []
+  },
+  {
+   "code": "A01666",
+   "device": "SINAMICS G120 CU240B-2/CU240E-2",
+   "total_s": 138,
+   "generate_ms": 138221,
+   "passed": true,
+   "invented": []
+  },
+  {
+   "code": "F30903",
+   "device": "SINAMICS G120 CU240B-2/CU240E-2",
+   "total_s": 181,
+   "generate_ms": 181317,
+   "passed": true,
+   "invented": []
+  },
+  {
+   "code": "F07084",
+   "device": "SINAMICS G120C",
+   "total_s": 131,
+   "generate_ms": 130737,
+   "passed": true,
+   "invented": []
+  },
+  {
+   "code": "F13101",
+   "device": "SINAMICS G120C",
+   "total_s": 180,
+   "generate_ms": 180307,
+   "passed": true,
+   "invented": []
+  },
+  {
+   "code": "F01910",
+   "device": "SINAMICS G120 CU240B-2/CU240E-2",
+   "total_s": 197,
+   "generate_ms": 197139,
+   "passed": true,
+   "invented": []
+  },
+  {
+   "code": "F01018",
+   "device": "SINAMICS G120C",
+   "total_s": 110,
+   "generate_ms": 110017,
+   "passed": true,
+   "invented": []
+  },
+  {
+   "code": "A02057",
+   "device": "SINAMICS G120C",
+   "total_s": 121,
+   "generate_ms": 120700,
+   "passed": true,
+   "invented": []
+  },
+  {
+   "code": "A30706",
+   "device": "SINAMICS G120 CU240B-2/CU240E-2",
+   "total_s": 269,
+   "generate_ms": 269154,
+   "passed": true,
+   "invented": []
+  },
+  {
+   "code": "F30659",
+   "device": "SINAMICS G120C",
+   "total_s": 220,
+   "generate_ms": 220230,
+   "passed": true,
+   "invented": []
+  },
+  {
+   "code": "A07920",
+   "device": "SINAMICS G120 CU240B-2/CU240E-2",
+   "total_s": 234,
+   "generate_ms": 233606,
+   "passed": true,
+   "invented": []
+  },
+  {
+   "code": "A08755",
+   "device": "SINAMICS G120C",
+   "total_s": 129,
+   "generate_ms": 129340,
+   "passed": true,
+   "invented": []
+  },
+  {
+   "code": "F02080",
+   "device": "SINAMICS G120C",
+   "total_s": 108,
+   "generate_ms": 108338,
+   "passed": true,
+   "invented": []
+  },
+  {
+   "code": "A07929",
+   "device": "SINAMICS G120C",
+   "total_s": 212,
+   "generate_ms": 211742,
+   "passed": true,
+   "invented": []
+  },
+  {
+   "code": "F30012",
+   "device": "SINAMICS G120 CU240B-2/CU240E-2",
+   "total_s": 178,
+   "generate_ms": 177749,
+   "passed": true,
+   "invented": []
+  },
+  {
+   "code": "F01651",
+   "device": "SINAMICS G120 CU240B-2/CU240E-2",
+   "total_s": 191,
+   "generate_ms": 191000,
+   "passed": true,
+   "invented": []
+  },
+  {
+   "code": "A08751",
+   "device": "SINAMICS G120C",
+   "total_s": 164,
+   "generate_ms": 164095,
+   "passed": true,
+   "invented": []
+  }
+ ]
+}

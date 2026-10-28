@@ -13,6 +13,9 @@ services:
     cpus: 4
     environment:
       - DIAG_THREADS=4
+      # On a 2-core device: DIAG_K=3 and DIAG_EXCERPT_CHARS=400 halve the latency (see README)
+      - DIAG_K=5
+      - DIAG_EXCERPT_CHARS=1400
     ports:
       - "8080:8080"
     logging:

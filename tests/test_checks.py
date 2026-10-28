@@ -1,6 +1,6 @@
 """Checks that run without the manuals or a model: identifier parsing and the answer gates."""
 
-from diag.agent import ack_conflicts, ground, stated_ack
+from diag.agent import ack_conflicts, excerpt, ground, stated_ack
 from diag.retrieve import Doc, identifiers
 
 KNOWN = {"F07900", "A07900", "F07807", "F01910", "p2040", "p1900", "r0035"}
@@ -59,3 +59,9 @@ def test_ack_conflict_accepts_either_mode_of_a_combined_entry():
 def test_ack_conflict_is_skipped_when_several_codes_matched():
     facts = [{"code": "A07409", "acknowledge": "NONE"}, {"code": "F07900", "acknowledge": "IMMEDIATELY"}]
     assert ack_conflicts("Acknowledge: NONE", facts) == []
+
+
+def test_short_excerpts_keep_the_matched_entry_whole():
+    long = "x" * 1000
+    assert excerpt(doc("F07900", long), other_chars=400) == long
+    assert excerpt(doc("p1900", long, why=("fused",), kind="parameter"), other_chars=400) == "x" * 400 + " ..."

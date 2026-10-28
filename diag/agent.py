@@ -60,22 +60,24 @@ def ids_in(text: str) -> list:
     return list(dict.fromkeys(found))
 
 
-def excerpt(d, max_chars: int = 1400) -> str:
-    return d.text if len(d.text) <= max_chars else d.text[:max_chars] + " ..."
+def excerpt(d, other_chars: int = 1400, max_chars: int = 1400) -> str:
+    """The exactly matched entry is cut at max_chars, every other excerpt at other_chars."""
+    limit = max_chars if "exact" in d.why else min(other_chars, max_chars)
+    return d.text if len(d.text) <= limit else d.text[:limit] + " ..."
 
 
-def context_block(docs: list) -> str:
-    return "\n\n".join(f"[S{i}] ({d.device}, {d.cite()})\n{excerpt(d)}" for i, d in enumerate(docs, 1))
+def context_block(docs: list, other_chars: int = 1400) -> str:
+    return "\n\n".join(f"[S{i}] ({d.device}, {d.cite()})\n{excerpt(d, other_chars)}" for i, d in enumerate(docs, 1))
 
 
-def ground(text: str, question: str, docs: list, known: set) -> tuple:
+def ground(text: str, question: str, docs: list, known: set, other_chars: int = 1400) -> tuple:
     """Split the identifiers in an answer into (mentioned, unsupported, invented).
 
     An identifier is supported if the model was shown it, in the question or in an excerpt
     (the manuals also name parameters of other SINAMICS families, which are not in this list).
     """
     mentioned = ids_in(text)
-    shown = set(ids_in(question)) | {i for d in docs for i in ids_in(excerpt(d))} | {d.id for d in docs}
+    shown = set(ids_in(question)) | {i for d in docs for i in ids_in(excerpt(d, other_chars))} | {d.id for d in docs}
     unsupported = [m for m in mentioned if m not in shown and m in known]
     invented = [m for m in mentioned if m not in shown and m not in known]
     return mentioned, unsupported, invented
@@ -117,20 +119,22 @@ def ack_conflicts(text: str, fact_list: list) -> list:
 
 class Agent:
     def __init__(self, kb: Path = Path("data/kb"), index: Path = Path("data/index"), model: str = DEFAULT_MODEL,
-                 n_threads: int = 4, n_ctx: int = 6144, retriever: Retriever = None):
+                 n_threads: int = 4, n_ctx: int = 6144, retriever: Retriever = None, k: int = 5,
+                 other_chars: int = 1400):
         from llama_cpp import Llama
         self.retriever = retriever or Retriever(kb, index)
         self.llm = Llama(model_path=model, n_ctx=n_ctx, n_threads=n_threads, verbose=False)
         self.model = Path(model).name
+        self.k, self.other_chars = k, other_chars  # k=3, 400 chars: a third of the prompt, for 2-core devices
 
     def generate(self, messages: list, max_tokens: int = 450) -> tuple:
         t = time.perf_counter()
         out = self.llm.create_chat_completion(messages=messages, temperature=0.0, max_tokens=max_tokens)
         return out["choices"][0]["message"]["content"].strip(), out["usage"], (time.perf_counter() - t) * 1000
 
-    def ask(self, question: str, device: str = None, k: int = 5, closed_book: bool = False) -> Answer:
+    def ask(self, question: str, device: str = None, closed_book: bool = False) -> Answer:
         t = time.perf_counter()
-        docs = [] if closed_book else self.retriever.search(question, k=k, device=device)
+        docs = [] if closed_book else self.retriever.search(question, k=self.k, device=device)
         retrieve_ms = (time.perf_counter() - t) * 1000
         if closed_book:
             messages = [{"role": "system", "content": SYSTEM.split(" Answer ONLY")[0] +
@@ -138,9 +142,9 @@ class Agent:
                         {"role": "user", "content": question}]
         else:
             messages = [{"role": "system", "content": SYSTEM},
-                        {"role": "user", "content": f"Manual excerpts:\n\n{context_block(docs)}\n\nQuestion: {question}"}]
+                        {"role": "user", "content": f"Manual excerpts:\n\n{context_block(docs, self.other_chars)}\n\nQuestion: {question}"}]
         text, usage, gen_ms = self.generate(messages)
-        mentioned, unsupported, invented = ground(text, question, docs, self.retriever.known)
+        mentioned, unsupported, invented = ground(text, question, docs, self.retriever.known, self.other_chars)
         fact_list = facts(docs)
         return Answer(
             question=question, text=text,

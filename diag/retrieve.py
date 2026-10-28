@@ -94,7 +94,9 @@ class Retriever:
                 self.vectors = np.load(cache)
             else:
                 index_dir.mkdir(parents=True, exist_ok=True)
-                self.vectors = np.array(list(self.embedder.embed([d.text[:2000] for d in self.docs])), dtype=np.float32)
+                # Small batches: the default (256) peaked above 7 GB while building on a 2-core, 8 GB VM.
+                self.vectors = np.array(list(self.embedder.embed([d.text[:2000] for d in self.docs], batch_size=16)),
+                                        dtype=np.float32)
                 np.save(cache, self.vectors)
 
     def search(self, query: str, k: int = 5, device=None, expand: int = 3) -> list:
